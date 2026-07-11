@@ -108,11 +108,16 @@ export class TelegramContext implements TelegramContextInterface {
 
   async answerCallback(text?: string, showAlert?: boolean): Promise<void> {
     if (!this.callbackQuery) return;
-    await this.sender.answerCallbackQuery({
-      callback_query_id: this.callbackQuery.id,
-      ...(text && { text }),
-      ...(showAlert && { show_alert: true }),
-    });
+    try {
+      await this.sender.answerCallbackQuery({
+        callback_query_id: this.callbackQuery.id,
+        ...(text && { text }),
+        ...(showAlert && { show_alert: true }),
+      });
+    } catch (err) {
+      this.logger.warn("answerCallbackQuery failed (non-fatal)", { error: String(err) });
+      return;
+    }
     this.logOutgoing("answerCallbackQuery");
   }
 

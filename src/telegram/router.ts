@@ -73,6 +73,17 @@ export class TelegramRouter {
           userId: ctx.user.id,
         });
         await this.handlePendingAction(ctx, start);
+      } else if (
+        hasText &&
+        ctx.message.text &&
+        !ctx.message.text.startsWith("/") &&
+        ctx.user &&
+        this.pendingActions.has(ctx.user.id)
+      ) {
+        this.logger.info(`Update ${updateId}: text message with pending action`, {
+          userId: ctx.user.id,
+        });
+        await this.handlePendingAction(ctx, start);
       } else if (hasText && ctx.message.text) {
         this.logger.info(`Update ${updateId}: message`, {
           userId: ctx.user?.id,
@@ -103,7 +114,9 @@ export class TelegramRouter {
       this.logger.error(`Pending action failed for user ${ctx.user.id}`, error);
       await this.safeReply(ctx, "An error occurred processing your request.");
     } finally {
-      this.pendingActions.delete(ctx.user.id);
+      if (this.pendingActions.get(ctx.user.id) === handler) {
+        this.pendingActions.delete(ctx.user.id);
+      }
     }
   }
 

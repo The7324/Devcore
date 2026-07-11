@@ -54,7 +54,7 @@ export function setupTelegram(
   router.register(pingCommand);
 
   if (connectionsLayer) {
-    router.register(createConnectionsCommand(connectionsLayer));
+    router.register(createConnectionsCommand(connectionsLayer, router));
     router.register(createCloudflareCommand(connectionsLayer));
     router.register(createR2Command(connectionsLayer, router));
     router.register(createD1Command(connectionsLayer));
