@@ -5,6 +5,7 @@ import { checkCredentialFormat, getNormalizedCredentials } from "@/providers/fir
 import { collectMetadata } from "@/providers/firebase/metadata";
 import type { FirebaseMetadata } from "@/providers/firebase/types";
 import { FirestoreManager } from "@/providers/firebase/firestore/manager";
+import { StorageManager } from "@/providers/firebase/storage/manager";
 
 export class FirebaseProviderPlugin implements ProviderPlugin {
   readonly meta: ProviderMeta = {
@@ -127,6 +128,17 @@ export class FirebaseProviderPlugin implements ProviderPlugin {
     const client = new FirebaseClient(norm.serviceAccount, this.logger);
     const { metadata, latency } = await collectMetadata(client, norm.projectId);
     return { metadata, latency };
+  }
+
+  createStorageManager(credentials: Record<string, string>): StorageManager {
+    const norm = getNormalizedCredentials(credentials);
+    const client = new FirebaseClient(norm.serviceAccount, this.logger);
+    return new StorageManager(
+      () => client.getAccessToken(),
+      norm.projectId,
+      this.logger,
+      norm.storageBucket ?? "",
+    );
   }
 
   createFirestoreManager(credentials: Record<string, string>, userId?: number): FirestoreManager {

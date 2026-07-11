@@ -25,6 +25,20 @@ export {
 export { FirestoreManager } from "@/providers/firebase/firestore/manager";
 export { FirestoreClient, FirestoreApiError } from "@/providers/firebase/firestore/client";
 export { formatDocumentValue, formatSize, formatTimestamp, firestoreFieldsToJson } from "@/providers/firebase/firestore/format";
+export { StorageManager } from "@/providers/firebase/storage/manager";
+export { StorageClient, StorageApiError } from "@/providers/firebase/storage/client";
+export { formatBytes } from "@/providers/firebase/storage/manager";
+export type {
+  StorageBucket,
+  StorageObject,
+  FileEntry,
+  FolderItem,
+  StorageStats,
+  BulkResult,
+  UploadResult,
+} from "@/providers/firebase/storage/types";
+// ponytail: StorageBrowseResult aliased to avoid conflict with Firestore's BrowseResult
+
 export type {
   FirestoreDatabase,
   FirestoreDocument,
