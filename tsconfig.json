@@ -32,7 +32,8 @@
       "@telegram/*": ["./telegram/*"],
       "@utils/*": ["./utils/*"],
       "@config/*": ["./config/*"],
-      "@constants/*": ["./constants/*"]
+      "@constants/*": ["./constants/*"],
+      "@providers/*": ["./providers/*"]
     }
   },
   "include": ["src/**/*.ts"],

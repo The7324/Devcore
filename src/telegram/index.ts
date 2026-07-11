@@ -7,6 +7,7 @@ import { startCommand } from "@/commands/start";
 import { helpCommand } from "@/commands/help";
 import { pingCommand } from "@/commands/ping";
 import { createConnectionsCommand } from "@/commands/connections";
+import { createCloudflareCommand } from "@/commands/cloudflare";
 import type { AuthLayer } from "@/auth";
 import type { ConnectionsLayer } from "@/connections";
 
@@ -47,6 +48,7 @@ export function setupTelegram(
 
   if (connectionsLayer) {
     router.register(createConnectionsCommand(connectionsLayer));
+    router.register(createCloudflareCommand(connectionsLayer));
     logger.info("Connection commands registered");
   }
 

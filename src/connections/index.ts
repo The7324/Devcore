@@ -29,10 +29,10 @@ export interface ConnectionsLayer {
 
 let connectionsInitialized = false;
 
-export function setupConnections(
+export async function setupConnections(
   encryptionKey: string | undefined,
   logger: Logger,
-): ConnectionsLayer {
+): Promise<ConnectionsLayer> {
   if (connectionsInitialized) {
     throw new Error("Connections layer is already initialized");
   }
@@ -44,9 +44,12 @@ export function setupConnections(
   const manager = new ConnectionManager(credentialManager, providerRegistry, health, logger);
   const wizard = new ConnectionWizard(manager, providerRegistry);
 
-  logger.info("Connections layer initialized", {
-    encryptionReady: !!encryptionKey,
-  });
+  if (encryptionKey) {
+    await credentialManager.init(encryptionKey);
+    logger.info("CredentialManager initialized with provided key");
+  } else {
+    logger.warn("No ENCRYPTION_KEY set — credential encryption disabled");
+  }
 
   return {
     credentialManager,
