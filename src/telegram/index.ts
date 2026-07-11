@@ -6,7 +6,9 @@ import { createWebhookHandler } from "@/telegram/webhook";
 import { startCommand } from "@/commands/start";
 import { helpCommand } from "@/commands/help";
 import { pingCommand } from "@/commands/ping";
+import { createConnectionsCommand } from "@/commands/connections";
 import type { AuthLayer } from "@/auth";
+import type { ConnectionsLayer } from "@/connections";
 
 export { TelegramContext } from "@/telegram/context";
 export { TelegramRouter } from "@/telegram/router";
@@ -25,6 +27,7 @@ export function setupTelegram(
   botToken: string,
   logger: Logger,
   authLayer?: AuthLayer,
+  connectionsLayer?: ConnectionsLayer,
 ): TelegramRouter {
   if (initDone) throw new Error("Telegram module is already initialized");
   initDone = true;
@@ -42,11 +45,17 @@ export function setupTelegram(
   router.register(helpCommand);
   router.register(pingCommand);
 
+  if (connectionsLayer) {
+    router.register(createConnectionsCommand(connectionsLayer));
+    logger.info("Connection commands registered");
+  }
+
   app.post("/webhook", createWebhookHandler(router, botToken, logger));
 
   logger.info("Telegram module initialized", {
     commands: router.registeredCommands.map((c) => c.meta.name),
     authEnabled: !!authLayer,
+    connectionsEnabled: !!connectionsLayer,
   });
 
   return router;

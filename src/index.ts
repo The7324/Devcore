@@ -1,6 +1,7 @@
 import { createApp } from "@/app";
 import { setupTelegram } from "@/telegram";
 import { setupAuth, type AuthConfig } from "@/auth";
+import { setupConnections } from "@/connections";
 import type { CloudflareBindings } from "@/types";
 
 const appCtx = createApp();
@@ -24,7 +25,8 @@ export default {
 
     const authConfig = buildAuthConfig(env);
     const authLayer = setupAuth(authConfig, appCtx.logger);
-    setupTelegram(appCtx.app, env.TELEGRAM_BOT_TOKEN, appCtx.logger, authLayer);
+    const connectionsLayer = setupConnections(env.ENCRYPTION_KEY, appCtx.logger);
+    setupTelegram(appCtx.app, env.TELEGRAM_BOT_TOKEN, appCtx.logger, authLayer, connectionsLayer);
 
     if (env.ENVIRONMENT !== "production") {
       appCtx.logger.info("DevCore starting", { environment: env.ENVIRONMENT ?? "development" });
