@@ -8,6 +8,14 @@ export interface CloudflareBindings {
   TELEGRAM_WEBHOOK_SECRET?: string;
   ENVIRONMENT?: string;
   LOG_LEVEL?: string;
+
+  OWNER_ID: number;
+  ADMIN_IDS?: string;
+  ENCRYPTION_KEY?: string;
+
+  RATE_LIMIT_MAX?: number;
+  RATE_LIMIT_WINDOW_SEC?: number;
+  SESSION_TTL_SEC?: number;
 }
 
 export interface TelegramUpdate {

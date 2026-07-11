@@ -10,3 +10,9 @@ export const DEFAULT_PAGE_SIZE = 20;
 export const MAX_PAGE_SIZE = 100;
 
 export const DB_BATCH_SIZE = 100;
+
+export const DEFAULT_RATE_LIMIT_MAX = 30;
+export const DEFAULT_RATE_LIMIT_WINDOW_SEC = 60;
+export const DEFAULT_SESSION_TTL_SEC = 3600;
+export const ENCRYPTION_KEY_BYTES = 32;
+export const ENCRYPTION_ITERATIONS = 600000;

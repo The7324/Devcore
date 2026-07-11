@@ -6,6 +6,7 @@ import { createWebhookHandler } from "@/telegram/webhook";
 import { startCommand } from "@/commands/start";
 import { helpCommand } from "@/commands/help";
 import { pingCommand } from "@/commands/ping";
+import type { AuthLayer } from "@/auth";
 
 export { TelegramContext } from "@/telegram/context";
 export { TelegramRouter } from "@/telegram/router";
@@ -17,13 +18,25 @@ export * as replyHelpers from "@/telegram/reply";
 export * as buttons from "@/telegram/buttons";
 export type * from "@/telegram/types";
 
-let telegramInitialized = false;
+let initDone = false;
 
-export function setupTelegram(app: Hono<AppEnv>, botToken: string, logger: Logger): void {
-  if (telegramInitialized) return;
-  telegramInitialized = true;
+export function setupTelegram(
+  app: Hono<AppEnv>,
+  botToken: string,
+  logger: Logger,
+  authLayer?: AuthLayer,
+): TelegramRouter {
+  if (initDone) throw new Error("Telegram module is already initialized");
+  initDone = true;
 
   const router = new TelegramRouter(logger);
+
+  if (authLayer) {
+    for (const mw of authLayer.middlewares) {
+      router.use(mw);
+    }
+    logger.info("Auth middlewares attached to Telegram router");
+  }
 
   router.register(startCommand);
   router.register(helpCommand);
@@ -33,5 +46,8 @@ export function setupTelegram(app: Hono<AppEnv>, botToken: string, logger: Logge
 
   logger.info("Telegram module initialized", {
     commands: router.registeredCommands.map((c) => c.meta.name),
+    authEnabled: !!authLayer,
   });
+
+  return router;
 }

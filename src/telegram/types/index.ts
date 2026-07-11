@@ -185,6 +185,7 @@ export interface TelegramCommandMeta {
 
 export interface TelegramCommand {
   meta: TelegramCommandMeta;
+  permissions?: string[];
   handle(ctx: TelegramContext): Promise<void>;
 }
 
