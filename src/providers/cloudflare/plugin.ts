@@ -5,6 +5,7 @@ import { checkCredentialFormat, getNormalizedCredentials } from "@/providers/clo
 import { collectMetadata } from "@/providers/cloudflare/metadata";
 import type { CloudflareMetadata } from "@/providers/cloudflare/types";
 import { ResourceApi } from "@/providers/cloudflare/resources";
+import { R2StorageManager } from "@/providers/cloudflare/r2";
 
 export class CloudflareProviderPlugin implements ProviderPlugin {
   readonly meta: ProviderMeta = {
@@ -84,5 +85,16 @@ export class CloudflareProviderPlugin implements ProviderPlugin {
     const norm = getNormalizedCredentials(credentials);
     const client = new CloudflareClient({ apiToken: norm.apiToken, email: norm.email, logger: this.logger });
     return new ResourceApi(client, norm.accountId);
+  }
+
+  createR2StorageManager(credentials: Record<string, string>, metadata: { tokenId?: string }): R2StorageManager {
+    const norm = getNormalizedCredentials(credentials);
+    return new R2StorageManager({
+      accountId: norm.accountId,
+      apiToken: norm.apiToken,
+      apiTokenId: metadata.tokenId,
+      email: norm.email,
+      s3Endpoint: `https://${norm.accountId}.r2.cloudflarestorage.com`,
+    }, this.logger);
   }
 }

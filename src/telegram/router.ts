@@ -5,14 +5,32 @@ import { extractCommand } from "@/utils/helpers";
 import type { CheckResult } from "@/auth/types";
 import { AuditMiddleware, type TelegramMiddleware } from "@/auth/middleware";
 
+export interface PendingActionHandler {
+  userId: number;
+  handle(ctx: TelegramContext): Promise<void>;
+}
+
 export class TelegramRouter {
   private readonly commands = new Map<string, TelegramCommand>();
   private readonly middlewares: TelegramMiddleware[] = [];
+  private readonly pendingActions = new Map<number, PendingActionHandler>();
 
   constructor(private readonly logger: Logger) {}
 
   use(middleware: TelegramMiddleware): void {
     this.middlewares.push(middleware);
+  }
+
+  setPendingAction(userId: number, handler: PendingActionHandler): void {
+    this.pendingActions.set(userId, handler);
+  }
+
+  clearPendingAction(userId: number): void {
+    this.pendingActions.delete(userId);
+  }
+
+  getPendingAction(userId: number): PendingActionHandler | undefined {
+    return this.pendingActions.get(userId);
   }
 
   register(command: TelegramCommand): void {
@@ -46,18 +64,47 @@ export class TelegramRouter {
         data: update.callback_query.data,
       });
       await this.handleCallback(ctx, start);
-    } else if (ctx.message?.text) {
-      this.logger.info(`Update ${updateId}: message`, {
-        userId: ctx.user?.id,
-        text: ctx.message.text.slice(0, 100),
-      });
-      await this.handleCommand(ctx, start);
+    } else if (ctx.message) {
+      const hasFile = !!(ctx.message.document || ctx.message.photo || ctx.message.video || ctx.message.audio);
+      const hasText = !!ctx.message.text;
+
+      if (hasFile && ctx.user && this.pendingActions.has(ctx.user.id)) {
+        this.logger.info(`Update ${updateId}: file message with pending action`, {
+          userId: ctx.user.id,
+        });
+        await this.handlePendingAction(ctx, start);
+      } else if (hasText && ctx.message.text) {
+        this.logger.info(`Update ${updateId}: message`, {
+          userId: ctx.user?.id,
+          text: ctx.message.text.slice(0, 100),
+        });
+        await this.handleCommand(ctx, start);
+      } else {
+        this.logger.debug(`Update ${updateId}: unhandled type`);
+      }
     } else {
       this.logger.debug(`Update ${updateId}: unhandled type`);
     }
 
     const elapsed = Date.now() - start;
     this.logger.debug(`Update ${updateId} processed in ${elapsed}ms`);
+  }
+
+  private async handlePendingAction(ctx: TelegramContext, _startMs: number): Promise<void> {
+    if (!ctx.user) return;
+    const handler = this.pendingActions.get(ctx.user.id);
+    if (!handler) return;
+
+    this.logger.info(`Executing pending action for user ${ctx.user.id}`);
+
+    try {
+      await handler.handle(ctx);
+    } catch (error) {
+      this.logger.error(`Pending action failed for user ${ctx.user.id}`, error);
+      await this.safeReply(ctx, "An error occurred processing your request.");
+    } finally {
+      this.pendingActions.delete(ctx.user.id);
+    }
   }
 
   private async handleCommand(ctx: TelegramContext, startMs: number): Promise<void> {

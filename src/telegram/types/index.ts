@@ -36,6 +36,8 @@ export interface TelegramMessage {
   reply_to_message?: TelegramMessage;
   photo?: TelegramPhotoSize[];
   document?: TelegramDocument;
+  video?: TelegramDocument;
+  audio?: TelegramDocument;
   reply_markup?: InlineKeyboardMarkup;
 }
 
