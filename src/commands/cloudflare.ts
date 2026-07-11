@@ -3,6 +3,7 @@ import type { ConnectionsLayer } from "@/connections";
 import { Permission } from "@/auth/types";
 import { CloudflareProviderPlugin } from "@/providers/cloudflare/plugin";
 import { cloudflareCard, connectionDetailKeyboard } from "@/providers/cloudflare/ui";
+import { resourceHandlers } from "@/commands/cloudflare.handlers";
 
 export function createCloudflareCommand(layer: ConnectionsLayer): TelegramCommand {
   return {
@@ -11,16 +12,31 @@ export function createCloudflareCommand(layer: ConnectionsLayer): TelegramComman
       description: "Manage Cloudflare connections",
       aliases: ["cf"],
       usage:
-        "/cloudflare — list Cloudflare connections\n"
-        + "/cloudflare status — check active connection health\n"
-        + "/cloudflare validate — revalidate active connection\n"
-        + "/cloudflare info — show active connection metadata\n"
-        + "/cloudflare reconnect — retry connection",
+        "/cloudflare — list connections\n"
+        + "/cloudflare status|validate|info|reconnect — connection management\n"
+        + "/cloudflare dns zones|records <zoneId> — DNS operations\n"
+        + "/cloudflare workers list|routes <zoneId> — Workers\n"
+        + "/cloudflare r2 buckets|objects <bucket> — R2\n"
+        + "/cloudflare d1 list|query <id> <sql> — D1\n"
+        + "/cloudflare kv namespaces — KV\n"
+        + "/cloudflare pages list|deployments <project> — Pages\n"
+        + "/cloudflare cache <zoneId> everything|url|tag|host|prefix — Cache\n"
+        + "/cloudflare queues list — Queues\n"
+        + "/cloudflare analytics <zoneId> — Analytics\n"
+        + "/cloudflare stream list — Stream\n"
+        + "/cloudflare ai models — AI\n"
+        + "/cloudflare access apps|groups — Zero Trust\n"
+        + "/cloudflare email settings|routes|destinations — Email Routing",
     },
     permissions: [Permission.ProvidersManage],
     async handle(ctx) {
       const args = ctx.commandArgs;
       const sub = args[0]?.toLowerCase();
+
+      if (sub && resourceHandlers[sub]) {
+        await handleResourceCommand(ctx, layer, sub, args.slice(1));
+        return;
+      }
 
       switch (sub) {
         case "status":
@@ -63,7 +79,11 @@ async function handleList(ctx: TelegramContext, layer: ConnectionsLayer): Promis
     lines.push(`${prefix} *${conn.name}* — ${conn.environment} (${conn.health})`);
   }
 
-  lines.push("", "Use /cloudflare status to check active connection health.");
+      lines.push(
+    "",
+    "Use /cloudflare status|validate|info|reconnect for connection management.",
+    "Use /cloudflare dns|workers|r2|d1|kv|pages|cache|queues|analytics|stream|ai|access|email for resource operations.",
+  );
   await ctx.replyMarkdown(lines.join("\n"));
 }
 
@@ -126,4 +146,19 @@ async function handleReconnect(ctx: TelegramContext, layer: ConnectionsLayer): P
   const health = await layer.manager.checkHealth(conn.id, ctx.user!.id);
   const status = health === "healthy" ? "✅ reconnected" : "❌ failed";
   await ctx.replyMarkdown(`☁️ *${conn.name}* reconnect: ${status} (health: \`${health}\`)`);
+}
+
+async function handleResourceCommand(ctx: TelegramContext, layer: ConnectionsLayer, resource: string, args: string[]): Promise<void> {
+  const conn = await getActiveConnection(ctx, layer);
+  if (!conn) return;
+
+  const full = layer.manager.get(conn.id);
+  if (!full) return;
+
+  const provider = layer.providerRegistry.get("Cloudflare");
+  if (!(provider instanceof CloudflareProviderPlugin)) return;
+
+  await ctx.sendTyping();
+  const api = provider.createResourceApi(await layer.credentialManager.decryptCredentials(full.encryptedCredentials));
+  await resourceHandlers[resource]!(ctx, api, args);
 }

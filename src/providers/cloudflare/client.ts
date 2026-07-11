@@ -10,8 +10,8 @@ export interface CfClientOptions {
 }
 
 export class CloudflareClient {
-  private readonly baseUrl = CF_API_BASE;
-  private readonly token: string;
+  readonly baseUrl = CF_API_BASE;
+  readonly token: string;
   private readonly email: string | undefined;
   private readonly logger: Logger | undefined;
 
@@ -30,12 +30,18 @@ export class CloudflareClient {
     return h;
   }
 
-  async get<T>(path: string): Promise<{ data: CfApiResponse<T>; latency: number }> {
+  private async request<T>(method: string, path: string, body?: unknown, extraHeaders?: Record<string, string>): Promise<{ data: CfApiResponse<T>; latency: number }> {
     const url = `${this.baseUrl}${path}`;
     const start = Date.now();
-    this.logger?.debug(`CF API GET ${path}`);
+    this.logger?.debug(`CF API ${method} ${path}`);
 
-    const response = await fetch(url, { method: "GET", headers: this.headers() });
+    const headers = { ...this.headers(), ...extraHeaders };
+    const init: RequestInit = { method, headers };
+    if (body !== undefined) {
+      init.body = typeof body === "string" ? body : JSON.stringify(body);
+    }
+
+    const response = await fetch(url, init);
     const latency = Date.now() - start;
 
     if (response.status === 429) {
@@ -43,23 +49,50 @@ export class CloudflareClient {
       throw new CfRateLimitError();
     }
 
-    if (!response.ok) {
-      const body = await response.json().catch(() => ({}));
-      const errors = (body as CfApiResponse<unknown>).errors ?? [];
+    if (!response.ok && method !== "DELETE") {
+      const errBody = await response.json().catch(() => ({}));
+      const errors = (errBody as CfApiResponse<unknown>).errors ?? [];
       this.logger?.error(`CF API error ${response.status}`, undefined, {
         path, status: response.status, errors,
       });
       throw CfApiError.fromResponse(response.status, errors);
     }
 
-    const data = await response.json() as CfApiResponse<T>;
-    this.logger?.debug(`CF API GET ${path} OK`, { latency, success: data.success });
+    if (method === "DELETE" && !response.ok) {
+      const errBody = await response.json().catch(() => ({}));
+      const errors = (errBody as CfApiResponse<unknown>).errors ?? [];
+      throw CfApiError.fromResponse(response.status, errors);
+    }
+
+    const text = await response.text();
+    const data = text ? JSON.parse(text) as CfApiResponse<T> : { success: true, errors: [], messages: [], result: null as T };
+    this.logger?.debug(`CF API ${method} ${path} OK`, { latency, success: data.success });
 
     if (!data.success && data.errors?.length) {
       throw CfApiError.fromResponse(response.status, data.errors);
     }
 
     return { data, latency };
+  }
+
+  async get<T>(path: string): Promise<{ data: CfApiResponse<T>; latency: number }> {
+    return this.request<T>("GET", path);
+  }
+
+  async post<T>(path: string, body?: unknown): Promise<{ data: CfApiResponse<T>; latency: number }> {
+    return this.request<T>("POST", path, body);
+  }
+
+  async patch<T>(path: string, body?: unknown): Promise<{ data: CfApiResponse<T>; latency: number }> {
+    return this.request<T>("PATCH", path, body);
+  }
+
+  async put<T>(path: string, body?: unknown, extraHeaders?: Record<string, string>): Promise<{ data: CfApiResponse<T>; latency: number }> {
+    return this.request<T>("PUT", path, body, extraHeaders);
+  }
+
+  async delete<T = void>(path: string): Promise<{ data: CfApiResponse<T>; latency: number }> {
+    return this.request<T>("DELETE", path);
   }
 }
 

@@ -4,6 +4,7 @@ import { CloudflareClient, CfApiError } from "@/providers/cloudflare/client";
 import { checkCredentialFormat, getNormalizedCredentials } from "@/providers/cloudflare/validation";
 import { collectMetadata } from "@/providers/cloudflare/metadata";
 import type { CloudflareMetadata } from "@/providers/cloudflare/types";
+import { ResourceApi } from "@/providers/cloudflare/resources";
 
 export class CloudflareProviderPlugin implements ProviderPlugin {
   readonly meta: ProviderMeta = {
@@ -77,5 +78,11 @@ export class CloudflareProviderPlugin implements ProviderPlugin {
     const norm = getNormalizedCredentials(credentials);
     const client = new CloudflareClient({ apiToken: norm.apiToken, email: norm.email, logger: this.logger });
     return collectMetadata(client);
+  }
+
+  createResourceApi(credentials: Record<string, string>): ResourceApi {
+    const norm = getNormalizedCredentials(credentials);
+    const client = new CloudflareClient({ apiToken: norm.apiToken, email: norm.email, logger: this.logger });
+    return new ResourceApi(client, norm.accountId);
   }
 }
