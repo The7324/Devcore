@@ -6,6 +6,7 @@ import { collectMetadata } from "@/providers/firebase/metadata";
 import type { FirebaseMetadata } from "@/providers/firebase/types";
 import { FirestoreManager } from "@/providers/firebase/firestore/manager";
 import { StorageManager } from "@/providers/firebase/storage/manager";
+import { AuthManager } from "@/providers/firebase/auth/manager";
 
 export class FirebaseProviderPlugin implements ProviderPlugin {
   readonly meta: ProviderMeta = {
@@ -138,6 +139,16 @@ export class FirebaseProviderPlugin implements ProviderPlugin {
       norm.projectId,
       this.logger,
       norm.storageBucket ?? "",
+    );
+  }
+
+  createAuthManager(credentials: Record<string, string>): AuthManager {
+    const norm = getNormalizedCredentials(credentials);
+    const client = new FirebaseClient(norm.serviceAccount, this.logger);
+    return new AuthManager(
+      () => client.getAccessToken(),
+      norm.projectId,
+      this.logger,
     );
   }
 

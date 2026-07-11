@@ -28,6 +28,16 @@ export { formatDocumentValue, formatSize, formatTimestamp, firestoreFieldsToJson
 export { StorageManager } from "@/providers/firebase/storage/manager";
 export { StorageClient, StorageApiError } from "@/providers/firebase/storage/client";
 export { formatBytes } from "@/providers/firebase/storage/manager";
+export { AuthManager } from "@/providers/firebase/auth/manager";
+export { AuthClient, AuthApiError } from "@/providers/firebase/auth/client";
+export type {
+  AuthUser,
+  AuthUserQueryResult,
+  AuthStats,
+  AuthUserUpdateResult,
+  OobCodeResult,
+} from "@/providers/firebase/auth/types";
+
 export type {
   StorageBucket,
   StorageObject,
