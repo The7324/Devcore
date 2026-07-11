@@ -11,7 +11,7 @@ Get DevCore running in under 5 minutes.
 ## 2. Clone & Install
 
 ```bash
-git clone https://github.com/your-org/devcore.git
+git clone https://github.com/The7324/Devcore.git
 cd devcore
 npm install
 ```

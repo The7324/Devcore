@@ -87,7 +87,7 @@ npx wrangler d1 migrations apply devcore-db
 
 ## Still Stuck?
 
-Open a [GitHub Issue](https://github.com/your-org/devcore/issues) with:
+Open a [GitHub Issue](https://github.com/The7324/Devcore/issues) with:
 - Error message (full text)
 - Steps to reproduce
 - Environment details (deployment type, Node version)

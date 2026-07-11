@@ -104,7 +104,7 @@ devcore/
 
 ```bash
 # Clone and install
-git clone https://github.com/your-org/devcore.git
+git clone https://github.com/The7324/Devcore.git
 cd devcore
 npm install
 
@@ -244,7 +244,7 @@ We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 ## Support
 
 - Documentation: Full docs in the `docs/` directory
-- Issues: [GitHub Issues](https://github.com/your-org/devcore/issues)
+- Issues: [GitHub Issues](https://github.com/The7324/Devcore/issues)
 - Security: See [SECURITY.md](SECURITY.md) for responsible disclosure
 
 ---

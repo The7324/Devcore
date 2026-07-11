@@ -20,8 +20,8 @@ All documentation is in the repository:
 
 ## Getting Help
 
-- **GitHub Issues:** https://github.com/your-org/devcore/issues
-- **Discussions:** https://github.com/your-org/devcore/discussions
+- **GitHub Issues:** https://github.com/The7324/Devcore/issues
+- **Discussions:** https://github.com/The7324/Devcore/discussions
 - **Security:** See [SECURITY.md](SECURITY.md) for reporting vulnerabilities
 
 ## Community
