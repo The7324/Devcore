@@ -1,9 +1,11 @@
 import { Logger } from "@/core/logger/logger";
+import type { Database } from "@/database";
 import { CredentialManager } from "@/connections/credential.manager";
 import { ProviderRegistry } from "@/connections/provider.registry";
 import { ConnectionManager } from "@/connections/connection.manager";
 import { HealthTracker } from "@/connections/health";
 import { ConnectionWizard } from "@/connections/wizard";
+import { ConnectionStore } from "@/connections/store";
 
 export type { Connection, ConnectionGroup, ConnectionLog, ConnectionFilter, ConnectionSearchResult, ConnectionStatus, HealthStatus, ActiveConnection, ProviderPlugin, ProviderMeta, CredentialField, WizardState, WizardStep, ImportExportData } from "@/connections/types";
 
@@ -32,6 +34,7 @@ let connectionsInitialized = false;
 export async function setupConnections(
   encryptionKey: string | undefined,
   logger: Logger,
+  db?: Database,
 ): Promise<ConnectionsLayer> {
   if (connectionsInitialized) {
     throw new Error("Connections layer is already initialized");
@@ -41,7 +44,8 @@ export async function setupConnections(
   const credentialManager = new CredentialManager();
   const providerRegistry = new ProviderRegistry();
   const health = new HealthTracker();
-  const manager = new ConnectionManager(credentialManager, providerRegistry, health, logger);
+  const store = db ? new ConnectionStore(db) : undefined;
+  const manager = new ConnectionManager(credentialManager, providerRegistry, health, logger, store);
   const wizard = new ConnectionWizard(manager, providerRegistry);
 
   if (encryptionKey) {
@@ -50,6 +54,8 @@ export async function setupConnections(
   } else {
     logger.warn("No ENCRYPTION_KEY set — credential encryption disabled");
   }
+
+  await manager.hydrate();
 
   return {
     credentialManager,

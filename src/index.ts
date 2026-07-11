@@ -3,6 +3,7 @@ import { setupTelegram } from "@/telegram";
 import { setupAuth, type AuthConfig } from "@/auth";
 import { setupConnections } from "@/connections";
 import { setupProviders } from "@/providers";
+import { createDatabase } from "@/database";
 import type { CloudflareBindings } from "@/types";
 
 const appCtx = createApp();
@@ -27,7 +28,11 @@ async function initialize(env: CloudflareBindings): Promise<void> {
       appCtx.config.load(env as unknown as Record<string, unknown>);
       const authConfig = buildAuthConfig(env);
       const authLayer = setupAuth(authConfig, appCtx.logger);
-      const connectionsLayer = await setupConnections(env.ENCRYPTION_KEY, appCtx.logger);
+      const connectionsLayer = await setupConnections(
+        env.ENCRYPTION_KEY,
+        appCtx.logger,
+        env.DB ? createDatabase(env.DB) : undefined,
+      );
       setupProviders(connectionsLayer.providerRegistry, appCtx.logger);
       setupTelegram(appCtx.app, env.TELEGRAM_BOT_TOKEN, appCtx.logger, authLayer, connectionsLayer);
       if (env.ENVIRONMENT !== "production") {

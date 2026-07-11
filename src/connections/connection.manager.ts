@@ -2,6 +2,7 @@ import { Logger } from "@/core/logger/logger";
 import { CredentialManager } from "@/connections/credential.manager";
 import { ProviderRegistry } from "@/connections/provider.registry";
 import { HealthTracker } from "@/connections/health";
+import type { ConnectionStore } from "@/connections/store";
 import type {
   Connection,
   ConnectionStatus,
@@ -31,7 +32,30 @@ export class ConnectionManager {
     private readonly registry: ProviderRegistry,
     private readonly health: HealthTracker,
     private readonly logger: Logger,
+    private readonly store?: ConnectionStore,
   ) {}
+
+  async hydrate(): Promise<void> {
+    if (!this.store) return;
+    try {
+      const conns = await this.store.loadConnections();
+      for (const conn of conns) this.connections.set(conn.id, conn);
+      const actives = await this.store.loadActiveConnections();
+      for (const active of actives) this.activeConnections.set(active.userId, active);
+      this.logger.info("Connections hydrated from D1", { connections: conns.length, active: actives.length });
+    } catch (error) {
+      this.logger.error("Failed to hydrate connections from D1", error);
+    }
+  }
+
+  private async persist(conn: Connection): Promise<void> {
+    if (!this.store) return;
+    try {
+      await this.store.saveConnection(conn);
+    } catch (error) {
+      this.logger.error("Failed to persist connection to D1", error);
+    }
+  }
 
   async create(
     ownerId: number,
@@ -83,6 +107,7 @@ export class ConnectionManager {
     };
 
     this.connections.set(connection.id, connection);
+    await this.persist(connection);
     this.logAction(connection.id, ownerId, "created", { provider, name });
     this.logger.info(`Connection created: ${name} (${provider})`, { ownerId });
 
@@ -120,6 +145,7 @@ export class ConnectionManager {
     }
 
     this.connections.set(id, updated);
+    await this.persist(updated);
     this.logAction(id, userId, "modified", { changes: Object.keys(updates) });
     return updated;
   }
@@ -137,6 +163,7 @@ export class ConnectionManager {
     };
 
     this.connections.set(id, updated);
+    await this.persist(updated);
     this.logAction(id, userId, "credential_update", {});
     this.logger.info(`Credentials updated for: ${conn.name}`, { userId });
     return updated;
@@ -148,6 +175,13 @@ export class ConnectionManager {
 
     this.connections.delete(id);
     this.activeConnections.delete(userId);
+    if (this.store) {
+      try {
+        await this.store.deleteConnection(id);
+      } catch (error) {
+        this.logger.error("Failed to delete connection from D1", error);
+      }
+    }
     this.logAction(id, userId, "deleted", { name: conn.name });
     this.logger.info(`Connection deleted: ${conn.name}`, { userId });
   }
@@ -166,6 +200,14 @@ export class ConnectionManager {
 
     const updated: Connection = { ...conn, lastUsedAt: new Date().toISOString() };
     this.connections.set(id, updated);
+    await this.persist(updated);
+    if (this.store) {
+      try {
+        await this.store.saveActive(active);
+      } catch (error) {
+        this.logger.error("Failed to persist active connection to D1", error);
+      }
+    }
 
     this.logAction(id, userId, "activated", {});
     return active;
@@ -173,6 +215,11 @@ export class ConnectionManager {
 
   deactivate(userId: number): void {
     this.activeConnections.delete(userId);
+    if (this.store) {
+      void this.store.deleteActive(userId).catch((error) => {
+        this.logger.error("Failed to remove active connection from D1", error);
+      });
+    }
   }
 
   getActive(userId: number): ActiveConnection | undefined {
@@ -201,6 +248,7 @@ export class ConnectionManager {
       ...(!result.valid && { status: "error" as ConnectionStatus }),
     };
     this.connections.set(id, updated);
+    await this.persist(updated);
 
     this.logAction(id, userId, "validated", { valid: result.valid, errors: result.errors });
     return result;
@@ -229,6 +277,7 @@ export class ConnectionManager {
       ...(status === "error" ? { status: "error" as ConnectionStatus } : {}),
     };
     this.connections.set(id, updated);
+    await this.persist(updated);
 
     this.logAction(id, userId, "health_check", { health: status });
     return status;
@@ -365,6 +414,7 @@ export class ConnectionManager {
         metadata: data.metadata,
       };
       this.connections.set(conn.id, conn);
+      await this.persist(conn);
       count++;
     }
     return count;
