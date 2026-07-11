@@ -6,7 +6,12 @@ import { createWebhookHandler } from "@/telegram/webhook";
 import { startCommand } from "@/commands/start";
 import { helpCommand } from "@/commands/help";
 import { pingCommand } from "@/commands/ping";
-import { createConnectionsCommand } from "@/commands/connections";
+import {
+  createConnectionsCommand,
+  createConnectCommand,
+  createSwitchCommand,
+  createDisconnectCommand,
+} from "@/commands/connections";
 import { createCloudflareCommand } from "@/commands/cloudflare";
 import { createR2Command } from "@/commands/r2";
 import { createD1Command } from "@/commands/d1";
@@ -55,6 +60,9 @@ export function setupTelegram(
 
   if (connectionsLayer) {
     router.register(createConnectionsCommand(connectionsLayer, router));
+    router.register(createConnectCommand(connectionsLayer, router));
+    router.register(createSwitchCommand(connectionsLayer));
+    router.register(createDisconnectCommand(connectionsLayer));
     router.register(createCloudflareCommand(connectionsLayer));
     router.register(createR2Command(connectionsLayer, router));
     router.register(createD1Command(connectionsLayer));

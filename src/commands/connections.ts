@@ -32,7 +32,7 @@ export function createConnectionsCommand(layer: ConnectionsLayer, router: Telegr
           await startAdd(ctx, layer, router);
           break;
         case "switch":
-          await handleSwitch(ctx, layer);
+          await handleSwitch(ctx, layer, ctx.commandArgs.slice(1).join(" "));
           break;
         case "disconnect":
           await handleDisconnect(ctx, layer);
@@ -40,6 +40,49 @@ export function createConnectionsCommand(layer: ConnectionsLayer, router: Telegr
         default:
           await handleList(ctx, layer);
       }
+    },
+  };
+}
+
+export function createConnectCommand(layer: ConnectionsLayer, router: TelegramRouter): TelegramCommand {
+  return {
+    meta: {
+      name: "connect",
+      description: "Add a new provider connection",
+      aliases: ["add"],
+      usage: "/connect — start the guided connection wizard",
+    },
+    permissions: [Permission.ProvidersManage],
+    async handle(ctx) {
+      await startAdd(ctx, layer, router);
+    },
+  };
+}
+
+export function createSwitchCommand(layer: ConnectionsLayer): TelegramCommand {
+  return {
+    meta: {
+      name: "switch",
+      description: "Switch the active connection",
+      usage: "/switch <name> — switch active connection",
+    },
+    permissions: [Permission.ProvidersView],
+    async handle(ctx) {
+      await handleSwitch(ctx, layer, ctx.commandArgs.join(" "));
+    },
+  };
+}
+
+export function createDisconnectCommand(layer: ConnectionsLayer): TelegramCommand {
+  return {
+    meta: {
+      name: "disconnect",
+      description: "Deactivate the active connection",
+      usage: "/disconnect — deactivate active connection",
+    },
+    permissions: [Permission.ProvidersView],
+    async handle(ctx) {
+      await handleDisconnect(ctx, layer);
     },
   };
 }
@@ -208,9 +251,7 @@ async function finishAdd(
   await ctx.replyMarkdown("✅ Connection saved, verified, and set as active.");
 }
 
-async function handleSwitch(ctx: TelegramContext, layer: ConnectionsLayer): Promise<void> {
-  const name = ctx.commandArgs.slice(1).join(" ");
-
+async function handleSwitch(ctx: TelegramContext, layer: ConnectionsLayer, name: string): Promise<void> {
   if (!name) {
     const active = layer.manager.getActive(ctx.user!.id);
     if (active) {
