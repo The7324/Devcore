@@ -5,5 +5,5 @@ compatibility_date = "2025-02-14"
 [[d1_databases]]
 binding = "DB"
 database_name = "devcore-db"
-database_id = "local"
+database_id = "be9dc5c2-63f6-4d5b-8e19-2fd894a0284a"
 migrations_dir = "src/database/migrations"
