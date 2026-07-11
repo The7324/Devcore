@@ -34,10 +34,5 @@ export function createApp(): AppContext {
 
   app.get(HEALTH_PATH, (c) => c.json({ status: "ok", timestamp: new Date().toISOString() }));
 
-  app.post("/webhook", async (c) => {
-    await router.dispatch(c);
-    return c.json({ ok: true });
-  });
-
   return { container, logger, config, router, plugins, middleware: mw, app };
 }

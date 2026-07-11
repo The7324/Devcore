@@ -27,6 +27,7 @@
       "@database/*": ["./database/*"],
       "@middleware/*": ["./middleware/*"],
       "@types/*": ["./types/*"],
+      "@telegram/*": ["./telegram/*"],
       "@utils/*": ["./utils/*"],
       "@config/*": ["./config/*"],
       "@constants/*": ["./constants/*"]
