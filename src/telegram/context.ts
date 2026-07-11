@@ -51,7 +51,7 @@ export class TelegramContext implements TelegramContextInterface {
 
   async replyMarkdown(text: string, options?: Omit<SendMessagePayload, "chat_id" | "text" | "parse_mode">): Promise<void> {
     if (!this.chat) return;
-    await this.sender.sendMessage({ chat_id: this.chat.id, text, parse_mode: "MarkdownV2", ...options });
+    await this.sender.sendMessage({ chat_id: this.chat.id, text, parse_mode: "Markdown", ...options });
     this.logOutgoing("sendMessage", text);
   }
 

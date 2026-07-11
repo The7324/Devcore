@@ -27,7 +27,7 @@ export async function replyMarkdown(ctx: ReplyContext, text: string, options?: O
   await ctx.sender.sendMessage({
     chat_id: ctx.chatId,
     text,
-    parse_mode: "MarkdownV2",
+    parse_mode: "Markdown",
     ...options,
   });
 }
