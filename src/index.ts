@@ -10,7 +10,7 @@ let initPromise: Promise<void> | null = null;
 
 function buildAuthConfig(env: CloudflareBindings): AuthConfig {
   return {
-    ownerId: env.OWNER_ID,
+    ownerId: Number(env.OWNER_ID),
     adminIds: typeof env.ADMIN_IDS === "string"
       ? env.ADMIN_IDS.split(",").map(Number).filter((n) => !Number.isNaN(n))
       : [],
@@ -39,7 +39,7 @@ async function initialize(env: CloudflareBindings): Promise<void> {
 }
 
 export default {
-  async fetch(request: Request, env: CloudflareBindings): Promise<Response> {
+  async fetch(request: Request, env: CloudflareBindings, ctx: ExecutionContext): Promise<Response> {
     try {
       await initialize(env);
     } catch (err) {
@@ -48,6 +48,6 @@ export default {
         headers: { "content-type": "application/json" },
       });
     }
-    return appCtx.app.fetch(request, env);
+    return appCtx.app.fetch(request, env, ctx);
   },
 } satisfies ExportedHandler<CloudflareBindings>;
