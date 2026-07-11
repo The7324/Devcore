@@ -6,6 +6,7 @@ import { collectMetadata } from "@/providers/cloudflare/metadata";
 import type { CloudflareMetadata } from "@/providers/cloudflare/types";
 import { ResourceApi } from "@/providers/cloudflare/resources";
 import { R2StorageManager } from "@/providers/cloudflare/r2";
+import { D1DatabaseManager } from "@/providers/cloudflare/d1";
 
 export class CloudflareProviderPlugin implements ProviderPlugin {
   readonly meta: ProviderMeta = {
@@ -95,6 +96,15 @@ export class CloudflareProviderPlugin implements ProviderPlugin {
       apiTokenId: metadata.tokenId,
       email: norm.email,
       s3Endpoint: `https://${norm.accountId}.r2.cloudflarestorage.com`,
+    }, this.logger);
+  }
+
+  createD1DatabaseManager(credentials: Record<string, string>): D1DatabaseManager {
+    const norm = getNormalizedCredentials(credentials);
+    return new D1DatabaseManager({
+      accountId: norm.accountId,
+      apiToken: norm.apiToken,
+      email: norm.email,
     }, this.logger);
   }
 }
