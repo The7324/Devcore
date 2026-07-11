@@ -11,6 +11,7 @@ import { createCloudflareCommand } from "@/commands/cloudflare";
 import { createR2Command } from "@/commands/r2";
 import { createD1Command } from "@/commands/d1";
 import { createFirebaseCommand } from "@/commands/firebase";
+import { createFirestoreCommand } from "@/commands/firestore";
 import type { AuthLayer } from "@/auth";
 import type { ConnectionsLayer } from "@/connections";
 
@@ -55,6 +56,7 @@ export function setupTelegram(
     router.register(createR2Command(connectionsLayer, router));
     router.register(createD1Command(connectionsLayer));
     router.register(createFirebaseCommand(connectionsLayer));
+    router.register(createFirestoreCommand(connectionsLayer));
     logger.info("Connection commands registered");
   }
 

@@ -21,3 +21,25 @@ export {
   FIREBASE_CAPABILITY_ICONS,
   FIREBASE_SERVICE_CAPABILITY_MAP,
 } from "@/providers/firebase/types";
+
+export { FirestoreManager } from "@/providers/firebase/firestore/manager";
+export { FirestoreClient, FirestoreApiError } from "@/providers/firebase/firestore/client";
+export { formatDocumentValue, formatSize, formatTimestamp, firestoreFieldsToJson } from "@/providers/firebase/firestore/format";
+export type {
+  FirestoreDatabase,
+  FirestoreDocument,
+  FirestoreStats,
+  CollectionInfo,
+  CollectionStats,
+  BrowseOptions,
+  BrowseResult,
+  ExecuteQueryOptions,
+  StructuredQuery,
+  Filter,
+  CrudOperation,
+  ExportFormat,
+  SearchOptions,
+  SearchResult,
+  FavoriteItem,
+  RecentItem,
+} from "@/providers/firebase/firestore/types";

@@ -4,6 +4,7 @@ import { FirebaseClient, FirebaseAuthError, FirebaseApiError } from "@/providers
 import { checkCredentialFormat, getNormalizedCredentials } from "@/providers/firebase/validation";
 import { collectMetadata } from "@/providers/firebase/metadata";
 import type { FirebaseMetadata } from "@/providers/firebase/types";
+import { FirestoreManager } from "@/providers/firebase/firestore/manager";
 
 export class FirebaseProviderPlugin implements ProviderPlugin {
   readonly meta: ProviderMeta = {
@@ -126,6 +127,18 @@ export class FirebaseProviderPlugin implements ProviderPlugin {
     const client = new FirebaseClient(norm.serviceAccount, this.logger);
     const { metadata, latency } = await collectMetadata(client, norm.projectId);
     return { metadata, latency };
+  }
+
+  createFirestoreManager(credentials: Record<string, string>, userId?: number): FirestoreManager {
+    const norm = getNormalizedCredentials(credentials);
+    const client = new FirebaseClient(norm.serviceAccount, this.logger);
+    return new FirestoreManager(
+      () => client.getAccessToken(),
+      norm.projectId,
+      this.logger,
+      norm.region ?? "(default)",
+      userId,
+    );
   }
 
   private extractErrorMessage(error: unknown): string {
