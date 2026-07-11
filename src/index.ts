@@ -6,6 +6,7 @@ import { setupProviders } from "@/providers";
 import type { CloudflareBindings } from "@/types";
 
 const appCtx = createApp();
+let initPromise: Promise<void> | null = null;
 
 function buildAuthConfig(env: CloudflareBindings): AuthConfig {
   return {
@@ -20,20 +21,33 @@ function buildAuthConfig(env: CloudflareBindings): AuthConfig {
   };
 }
 
+async function initialize(env: CloudflareBindings): Promise<void> {
+  if (!initPromise) {
+    initPromise = (async () => {
+      appCtx.config.load(env as unknown as Record<string, unknown>);
+      const authConfig = buildAuthConfig(env);
+      const authLayer = setupAuth(authConfig, appCtx.logger);
+      const connectionsLayer = await setupConnections(env.ENCRYPTION_KEY, appCtx.logger);
+      setupProviders(connectionsLayer.providerRegistry, appCtx.logger);
+      setupTelegram(appCtx.app, env.TELEGRAM_BOT_TOKEN, appCtx.logger, authLayer, connectionsLayer);
+      if (env.ENVIRONMENT !== "production") {
+        appCtx.logger.info("DevCore starting", { environment: env.ENVIRONMENT ?? "development" });
+      }
+    })();
+  }
+  await initPromise;
+}
+
 export default {
   async fetch(request: Request, env: CloudflareBindings): Promise<Response> {
-    appCtx.config.load(env as unknown as Record<string, unknown>);
-
-    const authConfig = buildAuthConfig(env);
-    const authLayer = setupAuth(authConfig, appCtx.logger);
-    const connectionsLayer = await setupConnections(env.ENCRYPTION_KEY, appCtx.logger);
-    setupProviders(connectionsLayer.providerRegistry, appCtx.logger);
-    setupTelegram(appCtx.app, env.TELEGRAM_BOT_TOKEN, appCtx.logger, authLayer, connectionsLayer);
-
-    if (env.ENVIRONMENT !== "production") {
-      appCtx.logger.info("DevCore starting", { environment: env.ENVIRONMENT ?? "development" });
+    try {
+      await initialize(env);
+    } catch (err) {
+      return new Response(JSON.stringify({ error: "Init failed", detail: String(err) }), {
+        status: 500,
+        headers: { "content-type": "application/json" },
+      });
     }
-
     return appCtx.app.fetch(request, env);
   },
 } satisfies ExportedHandler<CloudflareBindings>;

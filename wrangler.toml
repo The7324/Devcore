@@ -1,9 +1,10 @@
 name = "devcore"
 main = "src/index.ts"
-compatibility_date = "2025-02-14"
+compatibility_date = "2026-07-01"
 
 [[d1_databases]]
 binding = "DB"
 database_name = "devcore-db"
 database_id = "be9dc5c2-63f6-4d5b-8e19-2fd894a0284a"
 migrations_dir = "src/database/migrations"
+

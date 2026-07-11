@@ -35,7 +35,7 @@ export function createR2Command(layer: ConnectionsLayer, router?: TelegramRouter
     meta: {
       name: "r2",
       description: "Cloudflare R2 Storage Manager",
-      aliases: ["storage", "s3"],
+      aliases: ["s3"],
       usage:
         "/r2 — show R2 status\n"
         + "/r2 buckets — list and switch buckets\n"
