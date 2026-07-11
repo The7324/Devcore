@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.wrangler/
+devcore.sqlite
+devcore.sqlite-journal
+*.db
+*.db-journal
+.env
+.env.local
+.env.*.local
+*.tsbuildinfo

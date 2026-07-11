@@ -1,0 +1,9 @@
+name = "devcore"
+main = "src/index.ts"
+compatibility_date = "2025-02-14"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "devcore-db"
+database_id = "local"
+migrations_dir = "src/database/migrations"
